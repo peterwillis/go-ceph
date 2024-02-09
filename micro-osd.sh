@@ -39,10 +39,15 @@ MON_NAME="a"
 MGR_NAME="x"
 MIRROR_ID="m"
 RGW_ID="r"
-S3_ACCESS_KEY=2262XNX11FZRR44XWIRD
-S3_SECRET_KEY=rmtuS1Uj1bIC08QFYGW18GfSHAbkPqdsuYynNudw
-HOST_IP=$(getent ahostsv4 "${HOSTNAME}" | grep STREAM | head -n 1 | awk '{print $1}')
 
+# Following are examples for S3 credentials taken from official AWS docs:
+# https://docs.aws.amazon.com/IAM/latest/UserGuide/security-creds.html#access-keys-and-secret-access-keys
+# These does not represent real/valid credentials for AWS in any form.
+# They are exclusively used for testing S3 compatible API from Ceph RGW.
+S3_ACCESS_KEY=AKIAIOSFODNN7EXAMPLE
+S3_SECRET_KEY=wJalrXUtnFEMI/K7MDENG/bPxRfiCYEXAMPLEKEY
+
+HOST_IP=$(getent ahostsv4 "${HOSTNAME}" | grep STREAM | head -n 1 | awk '{print $1}')
 FSID="$(uuidgen)"
 export CEPH_CONF=${DIR}/ceph.conf
 
@@ -164,6 +169,10 @@ launch_radosgw() {
     radosgw-admin user create --uid admin --display-name "Admin User" --caps "buckets=*;users=*;usage=read;metadata=read" --access-key="$S3_ACCESS_KEY" --secret-key="$S3_SECRET_KEY"
 }
 
+launch_radosgw2() {
+    radosgw-admin caps add --uid=admin --caps="info=read"
+}
+
 selftest() {
     ceph --version
     ceph status
@@ -183,8 +192,11 @@ if [ -z "$FEATURESET" ] ; then
         nautilus|octopus)
             FEATURESET="mon osd mgr mds rbd-mirror rgw selftest"
         ;;
-        *)
+        pacific)
             FEATURESET="mon osd mgr mds mds2 rbd-mirror cephfs-mirror rgw selftest"
+        ;;
+        *)
+            FEATURESET="mon osd mgr mds mds2 rbd-mirror cephfs-mirror rgw rgw2 selftest"
         ;;
     esac
 fi
@@ -200,6 +212,7 @@ for fname in ${FEATURESET} ; do
         rbd-mirror) launch_rbd_mirror ;;
         cephfs-mirror) launch_cephfs_mirror ;;
         rgw|radosgw) launch_radosgw ;;
+        rgw2|radosgw2) launch_radosgw2 ;;
         selftest) selftest ;;
         *)
             echo "Invalid feature: ${fname}"

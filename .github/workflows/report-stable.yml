@@ -18,7 +18,7 @@ jobs:
     - name: Run makefile
       run: make api-report-issuetemplate  RESULTS_DIR=_results
     - name: Archive test results
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4
       with:
         name: "go-ceph-api-updates"
         path: |
@@ -32,6 +32,3 @@ jobs:
       with:
         filename: _results/issue.md
         update_existing: true
-
-
-  # TODO: teach this thing how to file an issue automatically
